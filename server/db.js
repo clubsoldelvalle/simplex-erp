@@ -2,14 +2,40 @@ const { DatabaseSync } = require('node:sqlite');
 const path = require('node:path');
 const fs = require('node:fs');
 
-// Ensure data folder exists
-let DATA_DIR = path.join(__dirname, '..', 'data');
-if (fs.existsSync('/home/u727870701')) {
-    DATA_DIR = '/home/u727870701/domains/repuestoscajica.com/public_html/upsseler/consolo/data';
+// Ensure local data folder exists
+const localDataDir = path.join(__dirname, '..', 'data');
+if (!fs.existsSync(localDataDir)) {
+    fs.mkdirSync(localDataDir, { recursive: true });
 }
-if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+
+// Auto-migrate SQLite databases from the old FTP directory if they exist and local ones are empty
+const oldDataDir = '/home/u727870701/domains/repuestoscajica.com/public_html/upsseler/consolo/data';
+if (fs.existsSync(oldDataDir)) {
+    const dbFiles = ['global.db', 'tenant_club.db', 'tenant_importadora.db'];
+    for (const file of dbFiles) {
+        const oldFilePath = path.join(oldDataDir, file);
+        const localFilePath = path.join(localDataDir, file);
+        
+        try {
+            if (fs.existsSync(oldFilePath)) {
+                const oldSize = fs.statSync(oldFilePath).size;
+                const localExists = fs.existsSync(localFilePath);
+                const localSize = localExists ? fs.statSync(localFilePath).size : 0;
+                
+                // If local file is empty (4096 bytes or less) and old file is larger, copy it!
+                if (oldSize > 10000 && localSize <= 4096) {
+                    console.log(`Auto-migrating database file: ${file} (${oldSize} bytes) -> local workspace`);
+                    fs.copyFileSync(oldFilePath, localFilePath);
+                    console.log(`Auto-migration of ${file} successful!`);
+                }
+            }
+        } catch (copyErr) {
+            console.error(`Failed to auto-migrate ${file} from old directory:`, copyErr.message);
+        }
+    }
 }
+
+const DATA_DIR = localDataDir;
 
 
 // Global DB Connection
@@ -613,5 +639,6 @@ module.exports = {
     getTenantDb,
     logAudit,
     syncProductToWordPress,
-    syncCustomerToWordPress
+    syncCustomerToWordPress,
+    DATA_DIR
 };

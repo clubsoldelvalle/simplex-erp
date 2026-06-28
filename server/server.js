@@ -87,7 +87,7 @@ function getFallbackImageUrl(description, tenantId) {
     }
     return 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=200&auto=format&fit=crop&q=60';
 }
-const { getTenantDb, globalDb, logAudit, syncProductToWordPress, syncCustomerToWordPress } = require('./db');
+const { getTenantDb, globalDb, logAudit, syncProductToWordPress, syncCustomerToWordPress, DATA_DIR } = require('./db');
 const { migrateImportadora, importTreintaInventory } = require('./migration');
 const { causarFacturaVenta, causarDocumentoSoporte, causarReciboCaja, causarComprobanteEgreso, causarNomina, causarNotaContabilidad, anularDocumento } = require('./causacion');
 const { startContingencyWorker, transmitToDIAN, generateCUFE, generateQRContent, generateInvoiceXML } = require('./dian');
@@ -223,9 +223,7 @@ const server = http.createServer(async (req, res) => {
                     return res.end('Base de datos no reconocida');
                 }
                 
-                const dbDataDir = fs.existsSync('/home/u727870701')
-                    ? '/home/u727870701/domains/repuestoscajica.com/public_html/upsseler/consolo/data'
-                    : path.join(__dirname, '..', 'data');
+                const dbDataDir = DATA_DIR;
                     
                 const filePath = path.join(dbDataDir, dbFilename);
                 if (!fs.existsSync(filePath)) {
