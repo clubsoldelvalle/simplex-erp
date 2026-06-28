@@ -1,0 +1,10 @@
+{
+  "name": "simplix-erp",
+  "version": "1.0.0",
+  "description": "Simplix ERP Contable",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "dependencies": {}
+}
