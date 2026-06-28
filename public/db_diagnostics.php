@@ -4,46 +4,57 @@ ini_set('display_errors', 1);
 
 header('Content-Type: text/plain; charset=utf-8');
 
-$dbPath = __DIR__ . '/../data/tenant_importadora.db';
-echo "Database Path: " . realpath($dbPath) . "\n";
-if (!file_exists($dbPath)) {
-    die("ERROR: Database file does not exist.\n");
-}
-echo "Database Size: " . filesize($dbPath) . " bytes\n";
+echo "Current Directory: " . __DIR__ . "\n";
+echo "Doc Root: " . $_SERVER['DOCUMENT_ROOT'] . "\n\n";
 
-try {
-    $db = new SQLite3($dbPath);
-    echo "Successfully connected to SQLite database.\n";
-    
-    // Count total terceros
-    $total = $db->querySingle("SELECT COUNT(*) FROM terceros");
-    echo "Total rows in terceros: " . $total . "\n";
-    
-    // Search for Karolain
-    echo "\nSearching for 'karol' in terceros table:\n";
-    $stmt = $db->prepare("SELECT id, identificacion, nombre, apellidos, tipo_empleado FROM terceros WHERE nombre LIKE :query OR apellidos LIKE :query");
-    $query = '%karol%';
-    $stmt->bindValue(':query', $query, SQLITE3_TEXT);
-    $result = $stmt->execute();
-    
-    $found = 0;
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-        $found++;
-        echo " - ID: {$row['id']}, NIT: {$row['identificacion']}, Nombre: {$row['nombre']} {$row['apellidos']}, Tipo Emp: {$row['tipo_empleado']}\n";
+$potentialPaths = [
+    __DIR__ . '/../data/tenant_importadora.db',
+    __DIR__ . '/../../data/tenant_importadora.db',
+    '/home/u727870701/domains/repuestoscajica.com/public_html/upsseler/consolo/data/tenant_importadora.db',
+    '/home/u727870701/domains/repuestoscajica.com/public_html/data/tenant_importadora.db',
+    '/home/u727870701/domains/repuestoscajica.com/data/tenant_importadora.db',
+];
+
+foreach ($potentialPaths as $p) {
+    echo "Checking: $p\n";
+    if (file_exists($p)) {
+        echo "--> EXISTS! Size: " . filesize($p) . " bytes\n";
+        
+        try {
+            $db = new SQLite3($p);
+            $total = $db->querySingle("SELECT COUNT(*) FROM terceros");
+            echo "--> Connected! Total Terceros: " . $total . "\n";
+            
+            // Search Karolain
+            $stmt = $db->prepare("SELECT id, identificacion, nombre, apellidos FROM terceros WHERE nombre LIKE '%karol%'");
+            $res = $stmt->execute();
+            while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+                echo "    Found: ID={$row['id']}, NIT={$row['identificacion']}, Nombre={$row['nombre']} {$row['apellidos']}\n";
+            }
+        } catch (Exception $e) {
+            echo "    Error: " . $e->getMessage() . "\n";
+        }
+    } else {
+        echo "--> Does not exist.\n";
     }
-    
-    if ($found === 0) {
-        echo " No matching terceros found for '%karol%'.\n";
+    echo "\n";
+}
+
+// Check contents of parent directories
+echo "=== Parent directory listings ===\n";
+$dir = __DIR__;
+for ($i = 0; $i < 3; $i++) {
+    $dir = dirname($dir);
+    echo "\nDirectory: $dir\n";
+    if (is_dir($dir)) {
+        $files = scandir($dir);
+        foreach ($files as $f) {
+            if ($f === '.' || $f === '..') continue;
+            $full = $dir . '/' . $f;
+            $type = is_dir($full) ? 'DIR' : 'FILE';
+            $size = $type === 'FILE' ? filesize($full) . ' B' : '';
+            echo "  [$type] $f $size\n";
+        }
     }
-    
-    // Let's print first 5 rows in terceros
-    echo "\nFirst 5 rows in terceros:\n";
-    $result = $db->query("SELECT id, identificacion, nombre, apellidos FROM terceros LIMIT 5");
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-        echo " - ID: {$row['id']}, NIT: {$row['identificacion']}, Nombre: {$row['nombre']} {$row['apellidos']}\n";
-    }
-    
-} catch (Exception $e) {
-    echo "Error: " . $e->getMessage() . "\n";
 }
 ?>
