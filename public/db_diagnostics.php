@@ -6,17 +6,8 @@ if (is_dir($dir)) {
     foreach ($files as $f) {
         if (strpos($f, 'tenant_') === 0) {
             $path = $dir . '/' . $f;
-            $size = 'unknown';
-            try {
-                $size = @filesize($path);
-                if ($size === false) {
-                    $err = error_get_last();
-                    $size = 'error (' . ($err ? $err['message'] : 'unknown') . ')';
-                }
-            } catch (Exception $e) {
-                $size = 'exception: ' . $e->getMessage();
-            }
-            echo "$f: $size bytes\n";
+            $type = @filetype($path);
+            echo "$f: type=" . ($type ? $type : 'error') . "\n";
         }
     }
 } else {
