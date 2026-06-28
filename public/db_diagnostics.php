@@ -15,35 +15,47 @@ $paths_to_test = [
 ];
 
 foreach ($paths_to_test as $p) {
-    $real = realpath($p);
     echo "Path: $p\n";
-    if ($real) {
-        $size = filesize($real);
-        echo "  Realpath: $real\n";
-        echo "  Size: $size bytes\n";
-        if ($size > 100) {
-            try {
-                $db = new SQLite3($real);
-                $total = $db->querySingle("SELECT COUNT(*) FROM terceros");
-                echo "  Total terceros: $total\n";
-                $karolCount = $db->querySingle("SELECT COUNT(*) FROM terceros WHERE nombre LIKE '%karol%'");
-                echo "  Terceros with 'karol': $karolCount\n";
-                
-                if ($karolCount > 0) {
-                    $res = $db->query("SELECT id, identificacion, nombre, apellidos FROM terceros WHERE nombre LIKE '%karol%'");
-                    while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
-                        echo "    - ID: {$row['id']}, NIT: {$row['identificacion']}, Nombre: {$row['nombre']} {$row['apellidos']}\n";
-                    }
-                }
-            } catch (Exception $e) {
-                echo "  DB Error: " . $e->getMessage() . "\n";
-            }
-        } else {
-            echo "  File is too small to be a database. Reading content:\n";
-            echo "  [" . file_get_contents($real) . "]\n";
+    $real = realpath($p);
+    if ($real === false) {
+        echo "  Does not exist.\n\n";
+        continue;
+    }
+    
+    echo "  Realpath: $real\n";
+    $size = filesize($real);
+    echo "  Size: $size bytes\n";
+    
+    if ($size < 100) {
+        echo "  File is too small to be a database.\n";
+        try {
+            $content = file_get_contents($real);
+            echo "  Content: [" . $content . "]\n";
+        } catch (Exception $e) {
+            echo "  Read Error: " . $e->getMessage() . "\n";
         }
-    } else {
-        echo "  Does not exist.\n";
+        echo "\n";
+        continue;
+    }
+    
+    try {
+        $db = new SQLite3($real);
+        echo "  Successfully connected to SQLite3.\n";
+        
+        $total = $db->querySingle("SELECT COUNT(*) FROM terceros");
+        echo "  Total terceros: $total\n";
+        
+        $karolCount = $db->querySingle("SELECT COUNT(*) FROM terceros WHERE nombre LIKE '%karol%'");
+        echo "  Terceros with 'karol': $karolCount\n";
+        
+        if ($karolCount > 0) {
+            $res = $db->query("SELECT id, identificacion, nombre, apellidos FROM terceros WHERE nombre LIKE '%karol%'");
+            while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+                echo "    - ID: {$row['id']}, NIT: {$row['identificacion']}, Nombre: {$row['nombre']} {$row['apellidos']}\n";
+            }
+        }
+    } catch (Throwable $e) {
+        echo "  Exception/Error: " . $e->getMessage() . "\n";
     }
     echo "\n";
 }
