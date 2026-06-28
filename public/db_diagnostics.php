@@ -4,53 +4,35 @@ ini_set('display_errors', 1);
 
 header('Content-Type: text/plain; charset=utf-8');
 
-echo "=== DB Copy Utility with Error Handling ===\n";
+echo "=== Hostinger Node.js Folder Diagnostics ===\n";
 
-$srcDir = '/home/u727870701/domains/repuestoscajica.com/public_html/upsseler/consolo/data';
-$destDir = '/home/u727870701/domains/simplix.repuestoscajica.com/nodejs/data';
-
-echo "Source Dir: $srcDir\n";
-echo "Dest Dir: $destDir\n\n";
-
-if (!is_dir($srcDir)) {
-    die("ERROR: Source directory not found.\n");
-}
-
-if (!is_dir($destDir)) {
-    echo "Creating destination directory...\n";
-    mkdir($destDir, 0755, true);
-}
-
-$files = ['tenant_importadora.db', 'tenant_club.db', 'global.db'];
-foreach ($files as $f) {
-    $srcFile = $srcDir . '/' . $f;
-    $destFile = $destDir . '/' . $f;
-    
-    echo "Copying $f:\n";
-    if (file_exists($srcFile)) {
-        echo "  Source size: " . filesize($srcFile) . " bytes\n";
+$dir = '/home/u727870701/domains/simplix.repuestoscajica.com/nodejs';
+if (is_dir($dir)) {
+    echo "Directory exists: $dir\n\n";
+    $files = scandir($dir);
+    foreach ($files as $f) {
+        if ($f === '.' || $f === '..') continue;
+        $path = $dir . '/' . $f;
+        $type = is_dir($path) ? 'DIR' : 'FILE';
+        $size = ($type === 'FILE') ? @filesize($path) . ' bytes' : '';
+        echo " - [$type] $f $size\n";
         
-        // Delete destination first to avoid lock issues if possible
-        if (file_exists($destFile)) {
-            echo "  Destination exists, trying to delete...\n";
-            $del = @unlink($destFile);
-            if ($del) {
-                echo "  Successfully deleted old destination file.\n";
+        // If it's a log file or text file, print its last 30 lines
+        if ($type === 'FILE' && (strpos($f, 'log') !== false || strpos($f, 'txt') !== false || strpos($f, 'err') !== false)) {
+            echo "   --- Content of $f (last 30 lines) ---\n";
+            $lines = @file($path);
+            if ($lines) {
+                $last_lines = array_slice($lines, -30);
+                foreach ($last_lines as $l) {
+                    echo "     " . trim($l) . "\n";
+                }
             } else {
-                echo "  Failed to delete old destination file (might be locked by Node.js).\n";
+                echo "     (Empty or unreadable)\n";
             }
+            echo "   -------------------------------------\n\n";
         }
-        
-        $ok = @copy($srcFile, $destFile);
-        if ($ok) {
-            echo "  SUCCESS! Destination size: " . filesize($destFile) . " bytes\n";
-        } else {
-            $err = error_get_last();
-            echo "  FAILED to copy. Error: " . ($err ? $err['message'] : 'unknown') . "\n";
-        }
-    } else {
-        echo "  Source file does not exist.\n";
     }
-    echo "\n";
+} else {
+    echo "Directory not found: $dir\n";
 }
 ?>
