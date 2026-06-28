@@ -2844,6 +2844,14 @@
             </div>
             <form id="usuario-form" onsubmit="submitNewUsuario(event)">
                 <input type="hidden" id="u-is-edit" value="false">
+                <div class="form-row" id="u-tercero-search-row">
+                    <div class="form-group" style="position: relative; width: 100%;">
+                        <label for="u-tercero-search" style="color: var(--accent); font-weight: bold;">Autocompletar desde Tercero (Wordoffice / Existente)</label>
+                        <input type="text" id="u-tercero-search" placeholder="Busca por Nombre o Cédula/NIT para llenar los datos..." style="border: 2px solid var(--accent); background-color: rgba(37, 99, 235, 0.02);">
+                        <input type="hidden" id="u-tercero-id" value="">
+                        <div id="u-tercero-results" class="autocomplete-results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; max-height: 200px; overflow-y: auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--border-radius-sm); box-shadow: var(--box-shadow);"></div>
+                    </div>
+                </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="u-username">Nombre de Usuario (Login)</label>

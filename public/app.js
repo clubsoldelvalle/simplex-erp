@@ -4893,6 +4893,31 @@ function setupAutocompletesAll() {
     // POS & Reservas
     setupAutocomplete('pos-cliente-search', 'pos-cliente', 'pos-cliente-results', 'terceros');
     setupAutocomplete('res-cliente-search', 'res-cliente', 'res-cliente-results', 'terceros');
+
+    // Autocomplete for register user modal
+    setupAutocomplete('u-tercero-search', 'u-tercero-id', 'u-tercero-results', 'terceros', (tercero) => {
+        if (!tercero) return;
+        document.getElementById('u-nombre').value = tercero.nombre || '';
+        document.getElementById('u-apellidos').value = tercero.apellidos || '';
+        document.getElementById('u-tipo-doc').value = tercero.tipo_identificacion || 'CC';
+        document.getElementById('u-doc').value = tercero.identificacion || '';
+        document.getElementById('u-email').value = tercero.email || '';
+        document.getElementById('u-telefono').value = tercero.telefono || '';
+        document.getElementById('u-direccion').value = tercero.direccion || '';
+        document.getElementById('u-ciudad').value = tercero.ciudad || 'Bogotá';
+        document.getElementById('u-sueldo').value = tercero.sueldo || 1300000;
+        
+        // Auto-generate suggested username
+        if (tercero.nombre) {
+            const cleanName = tercero.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+            const cleanLastName = (tercero.apellidos || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "").split(' ')[0];
+            if (cleanLastName) {
+                document.getElementById('u-username').value = `${cleanName.split(' ')[0]}.${cleanLastName}`;
+            } else {
+                document.getElementById('u-username').value = cleanName.split(' ')[0];
+            }
+        }
+    });
 }
 
 function clearAutocompleteFields() {
@@ -4902,7 +4927,7 @@ function clearAutocompleteFields() {
         'ce-doc-beneficiario-search', 'ce-doc-cuenta-gasto-search',
         'rc-doc-cliente-search', 'rc-doc-cuenta-ingreso-search',
         'nm-doc-empleado-search', 'fil-producto-search',
-        'pos-cliente-search', 'res-cliente-search'
+        'pos-cliente-search', 'res-cliente-search', 'u-tercero-search'
     ];
     searchInputs.forEach(id => {
         const el = document.getElementById(id);
@@ -7979,6 +8004,12 @@ function openNewUsuarioModal() {
     document.getElementById('u-email').value = '';
     document.getElementById('u-telefono').value = '';
     document.getElementById('u-direccion').value = '';
+    
+    // Clear and show third-party autocomplete
+    document.getElementById('u-tercero-search').value = '';
+    document.getElementById('u-tercero-id').value = '';
+    document.getElementById('u-tercero-search-row').style.display = 'flex';
+    
     showModal('usuario-modal');
 }
 
@@ -8008,6 +8039,11 @@ function editUsuario(username) {
     document.getElementById('u-telefono').value = u.telefono || '';
     document.getElementById('u-direccion').value = u.direccion || '';
     document.getElementById('u-ciudad').value = u.ciudad || 'Bogotá';
+    
+    // Hide third-party autocomplete when editing
+    document.getElementById('u-tercero-search').value = '';
+    document.getElementById('u-tercero-id').value = '';
+    document.getElementById('u-tercero-search-row').style.display = 'none';
     
     showModal('usuario-modal');
 }
