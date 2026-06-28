@@ -143,6 +143,16 @@ body {
 
 .menu-item i {
     font-size: 16px;
+    color: var(--accent);
+    transition: color var(--transition-speed);
+}
+
+.menu-item.active i {
+    color: inherit;
+}
+
+.menu-item:hover i {
+    color: var(--primary-hover);
 }
 
 .menu-item:hover {
