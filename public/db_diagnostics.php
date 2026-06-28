@@ -4,10 +4,11 @@ $dir = '/home/u727870701/domains/repuestoscajica.com/public_html/upsseler/consol
 if (is_dir($dir)) {
     $files = scandir($dir);
     foreach ($files as $f) {
-        if ($f === '.' || $f === '..') continue;
-        echo "$f: " . filesize($dir . '/' . $f) . " bytes\n";
+        if (strpos($f, 'tenant_') === 0) {
+            echo "$f: " . filesize($dir . '/' . $f) . " bytes\n";
+        }
     }
 } else {
-    echo "Directory $dir not found.\n";
+    echo "Directory not found.\n";
 }
 ?>
