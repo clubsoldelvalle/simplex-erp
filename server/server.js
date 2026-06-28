@@ -201,6 +201,48 @@ const server = http.createServer(async (req, res) => {
         try {
             const apiAction = pathParts[1];
             
+            // Backup download route
+            if (apiAction === 'backup' && req.method === 'GET') {
+                const subAction = pathParts[2]; // 'global', 'importadora', 'club'
+                const token = reqUrl.query.token;
+                
+                if (token !== 'PatucarroBackup2026*') {
+                    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+                    return res.end('Acceso denegado: Token de backup inválido');
+                }
+                
+                let dbFilename = '';
+                if (subAction === 'global') {
+                    dbFilename = 'global.db';
+                } else if (subAction === 'importadora') {
+                    dbFilename = 'tenant_importadora.db';
+                } else if (subAction === 'club') {
+                    dbFilename = 'tenant_club.db';
+                } else {
+                    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+                    return res.end('Base de datos no reconocida');
+                }
+                
+                const dbDataDir = fs.existsSync('/home/u727870701')
+                    ? '/home/u727870701/domains/repuestoscajica.com/public_html/upsseler/consolo/data'
+                    : path.join(__dirname, '..', 'data');
+                    
+                const filePath = path.join(dbDataDir, dbFilename);
+                if (!fs.existsSync(filePath)) {
+                    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+                    return res.end(`Archivo no encontrado: ${dbFilename}`);
+                }
+                
+                res.writeHead(200, {
+                    'Content-Type': 'application/octet-stream',
+                    'Content-Disposition': `attachment; filename="${dbFilename}"`
+                });
+                
+                const stream = fs.createReadStream(filePath);
+                stream.pipe(res);
+                return;
+            }
+            
             // 1. GET /api/tenants
             if (apiAction === 'tenants' && req.method === 'GET') {
                 const tenants = globalDb.prepare("SELECT * FROM tenants").all();
