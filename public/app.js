@@ -4445,11 +4445,12 @@ function setupAutocomplete(inputId, hiddenId, resultsId, type, onSelectCallback)
 
         let matches = [];
         if (type === 'terceros') {
-            matches = cacheTerceros.filter(t => 
-                t.identificacion.toLowerCase().includes(query) || 
-                t.nombre.toLowerCase().includes(query) ||
-                (t.apellidos && t.apellidos.toLowerCase().includes(query))
-            ).slice(0, 15);
+            matches = cacheTerceros.filter(t => {
+                const idStr = t.identificacion ? String(t.identificacion).toLowerCase() : '';
+                const nameStr = t.nombre ? String(t.nombre).toLowerCase() : '';
+                const lastNameStr = t.apellidos ? String(t.apellidos).toLowerCase() : '';
+                return idStr.includes(query) || nameStr.includes(query) || lastNameStr.includes(query);
+            }).slice(0, 15);
         } else if (type === 'inventario') {
             try {
                 const resData = await fetchApi(`/${activeTenant}/inventario?page=1&limit=15&q=${encodeURIComponent(query)}`);
@@ -8079,8 +8080,8 @@ function setupValidationWarnings() {
                 alertEl.style.display = 'none';
                 return;
             }
-            const exists = cacheTerceros.find(t => t.nombre.toLowerCase().includes(name));
-            if (exists && exists.nombre.toLowerCase() === name) {
+            const exists = cacheTerceros.find(t => t.nombre && String(t.nombre).toLowerCase().includes(name));
+            if (exists && String(exists.nombre).toLowerCase() === name) {
                 alertEl.innerText = `⚠️ Ya existe un tercero con el nombre: ${exists.nombre}`;
                 alertEl.style.display = 'block';
             } else {
